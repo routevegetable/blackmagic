@@ -28,6 +28,8 @@
 #define DFU_IDENT               "Black Magic Firmware Upgrade (Launchpad)"
 #define DFU_IFACE_STRING	"lolwut"
 
+#define SCB_RESET()		scb_reset_core();
+
 extern uint8_t running_status;
 
 #define TMS_PORT	GPIOA_BASE

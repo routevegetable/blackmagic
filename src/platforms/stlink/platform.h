@@ -44,6 +44,8 @@
 #define DFU_IDENT         "Black Magic Firmware Upgrade (STLINK)"
 #define UPD_IFACE_STRING  "@Internal Flash   /0x08000000/8*001Kg"
 
+#define SCB_RESET()		scb_reset_system();
+
 /* Hardware definitions... */
 #define TDI_PORT	GPIOA
 #define TMS_PORT	GPIOB

@@ -416,7 +416,7 @@ static void dfu_detach_complete(usbd_device *dev, struct usb_setup_data *req)
 	platform_request_boot();
 
 	/* Reset core to enter bootloader */
-	scb_reset_core();
+	SCB_RESET();
 }
 
 static int cdcacm_control_request(usbd_device *dev,

@@ -35,6 +35,8 @@
 #define BOARD_IDENT "Black Magic Probe (F4Discovery), (Firmware " FIRMWARE_VERSION ")"
 #define DFU_IDENT   "Black Magic Firmware Upgrade (F4Discovery)"
 
+#define SCB_RESET()		scb_reset_core();
+
 /* Important pin mappings for STM32 implementation:
  *
  * LED0 = 	PD12	(Green  LED : Running)

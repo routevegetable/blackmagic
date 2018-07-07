@@ -40,6 +40,8 @@
 #define DFU_IDENT               "Black Magic Firmware Upgrade"
 #define UPD_IFACE_STRING        "@Internal Flash   /0x08000000/8*001Kg"
 
+#define SCB_RESET()		scb_reset_core();
+
 /* Important pin mappings for STM32 implementation:
  *
  * LED0 = 	PB2	(Yellow LED : Running)

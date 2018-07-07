@@ -37,6 +37,8 @@
 #define BOARD_IDENT_DFU   "Black Magic (Upgrade) for HydraBus, (Firmware " FIRMWARE_VERSION ")"
 #define DFU_IDENT         "Black Magic Firmware Upgrade (HydraBus)"
 
+#define SCB_RESET()		scb_reset_core();
+
 /* Important pin mappings for STM32 implementation:
  *
  * LED0 = 	PA4	(Green LED : Running)
