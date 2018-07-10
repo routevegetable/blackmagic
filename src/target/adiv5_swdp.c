@@ -42,6 +42,17 @@ static uint32_t adiv5_swdp_low_access(ADIv5_DP_t *dp, uint8_t RnW,
 
 static void adiv5_swdp_abort(ADIv5_DP_t *dp, uint32_t abort);
 
+static inline void swdptap_bit_out(bool val)
+{
+#ifdef DEBUG_SWD_BITS
+	DEBUG("%d", val);
+#endif
+
+	gpio_set_val(SWDIO_PORT, SWDIO_PIN, val);
+	gpio_set(SWCLK_PORT, SWCLK_PIN);
+	gpio_clear(SWCLK_PORT, SWCLK_PIN);
+}
+
 int adiv5_swdp_scan(void)
 {
 	uint8_t ack;
