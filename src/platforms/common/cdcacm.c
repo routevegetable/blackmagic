@@ -555,6 +555,7 @@ void cdcacm_init(void)
 
 	nvic_set_priority(USB_IRQ, IRQ_PRI_USB);
 	nvic_enable_irq(USB_IRQ);
+	usbd_disconnect(usbdev, false);
 }
 
 void USB_ISR(void)
