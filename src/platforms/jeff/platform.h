@@ -47,13 +47,13 @@ extern uint8_t running_status;
 #define TMS_PIN		GPIO7
 
 #define TCK_PORT	PORTA
-#define TCK_PIN		GPIO8
+#define TCK_PIN		GPIO5
 
 #define TDI_PORT	PORTA
-#define TDI_PIN		GPIO5
+#define TDI_PIN		GPIO3
 
 #define TDO_PORT	PORTA
-#define TDO_PIN		GPIO4
+#define TDO_PIN		GPIO2
 
 #define SWO_PORT	PORTA
 #define SWO_PIN		GPIO6
@@ -67,6 +67,9 @@ extern uint8_t running_status;
 
 #define SRST_PORT	PORTA
 #define SRST_PIN	GPIO6
+
+#define LED_PORT_UART	PORTA
+#define LED_UART	GPIO12
 
 #else
 
@@ -98,6 +101,10 @@ extern uint8_t running_status;
 
 #define SRST_PORT	PORTA
 #define SRST_PIN	GPIO26
+
+#define LED_PORT_UART	PORTA
+#define LED_UART	GPIO12
+
 #endif
 
 #define TMS_SET_MODE()	{ \
@@ -123,25 +130,25 @@ extern uint8_t running_status;
 
 #define gpio_set_val(port, pin, val) do {	\
 	if(val)					\
-		gpio_set((port), (pin));	\
+		_gpio_set((port), (pin));	\
 	else					\
-		gpio_clear((port), (pin));	\
+		_gpio_clear((port), (pin));	\
 } while(0)
 
 #ifdef INLINE_GPIO
-static inline void _gpio_set(uint32_t gpioport, uint16_t gpios)
+static inline void _gpio_set(uint32_t gpioport, uint32_t gpios)
 {
 	PORT_OUTSET(gpioport) = gpios;
 }
 #define gpio_set _gpio_set
 
-static inline void _gpio_clear(uint32_t gpioport, uint16_t gpios)
+static inline void _gpio_clear(uint32_t gpioport, uint32_t gpios)
 {
 	PORT_OUTCLR(gpioport) = gpios;
 }
 #define gpio_clear _gpio_clear
 
-static inline uint16_t _gpio_get(uint32_t gpioport, uint16_t gpios)
+static inline uint16_t _gpio_get(uint32_t gpioport, uint32_t gpios)
 {
 	return (uint32_t)PORT_IN(gpioport) & gpios;
 }
@@ -158,4 +165,6 @@ static inline int platform_hwversion(void)
 {
 	        return 0;
 }
+
+void uart_pop(void);
 #endif

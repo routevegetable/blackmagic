@@ -40,4 +40,3 @@ jtagtap_next(const uint8_t dTMS, const uint8_t dTDI)
 
 	return ret != 0;
 }
-

@@ -52,7 +52,9 @@ void sys_tick_handler(void)
 	if(running_status)
 		gpio_toggle(LED_PORT, LED_IDLE_RUN);
 
-	time_ms += 10;
+	time_ms += 1;
+
+	uart_pop();
 }
 
 uint32_t platform_time_ms(void)
@@ -79,7 +81,7 @@ static uint32_t timing_init(void)
 	uint32_t cal = 0;
 
 	systick_set_clocksource(STK_CSR_CLKSOURCE_AHB);
-	systick_set_reload(480000);	/* Interrupt us at 10 Hz */
+	systick_set_reload(48000);	/* Interrupt us at 10 Hz */
 	systick_interrupt_enable();
 
 	systick_counter_enable();
@@ -110,11 +112,12 @@ void platform_init(void)
 	gpio_config_output(SRST_PORT, SRST_PIN, GPIO_OUT_FLAG_DEFAULT_HIGH);
 	gpio_set(SRST_PORT, SRST_PIN);
 
+	/* setup uart led, disable by default*/
+	gpio_config_output(LED_PORT_UART, LED_UART, 0);//GPIO_OUT_FLAG_DEFAULT_HIGH);
+	gpio_clear(LED_PORT_UART, LED_UART);
+
 	timing_init();
-
-	//nvic_enable_irq(NVIC_UART0_IRQ);
-	//usbuart_init();
-
+	usbuart_init();
 	cdcacm_init();
 }
 
