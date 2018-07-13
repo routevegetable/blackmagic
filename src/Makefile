@@ -11,12 +11,12 @@ endif
 OPT_FLAGS ?= -O2
 
 CFLAGS += -Wall -Wextra -Werror -Wno-char-subscripts\
-	$(OPT_FLAGS) -std=gnu99 -g3 -MD \
+	$(OPT_FLAGS) -std=gnu99 -MD \
 	-I. -Iinclude -Iplatforms/common -I$(PLATFORM_DIR)
 LDFLAGS += $(OPT_FLAGS)
 
 ifeq ($(ENABLE_DEBUG), 1)
-CFLAGS += -DENABLE_DEBUG
+CFLAGS += -DENABLE_DEBUG -g3 -ggdb
 endif
 
 SRC =			\
