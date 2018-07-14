@@ -3,8 +3,8 @@ CC = $(CROSS_COMPILE)gcc
 OBJCOPY = $(CROSS_COMPILE)objcopy
 
 
-ifeq ($(DEBUG_ME), 1)
-CFLAGS += -DDEBUG_ME
+ifeq ($(ENABLE_DEBUG), 1)
+CFLAGS += -DENABLE_DEBUG
 endif
 
 CFLAGS += -mthumb -mcpu=cortex-m0plus \

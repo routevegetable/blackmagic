@@ -73,8 +73,8 @@ static void usart_putc(char c)
 void usbuart_init(void)
 {
 	/* enable gpios */
-	gpio_config_special(PORTA, GPIO8, SOC_GPIO_PERIPH_C); /* tx pin */
-	gpio_config_special(PORTA, GPIO9, SOC_GPIO_PERIPH_C); /* rx pin */
+	gpio_config_special(PORTA, UART_TX_PIN, UART_PERIPH); /* tx pin */
+	gpio_config_special(PORTA, UART_RX_PIN, UART_PERIPH); /* rx pin */
 
 	/* enable clocking to sercom3 */
 	set_periph_clk(GCLK0, GCLK_ID_SERCOM0_CORE);

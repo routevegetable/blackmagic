@@ -30,10 +30,10 @@
 //#define PLATFORM_HAS_DEBUG
 //#define USBUART_DEBUG
 
-#define BOARD_IDENT             "Black Magic Probe (Launchpad ICDI), (Firmware " FIRMWARE_VERSION ")"
+#define BOARD_IDENT             "Black Magic Probe (SAMD), (Firmware " FIRMWARE_VERSION ")"
 #define BOARD_IDENT_DFU		"Black Magic (Upgrade) for Launchpad, (Firmware " FIRMWARE_VERSION ")"
-#define DFU_IDENT               "Black Magic Firmware Upgrade (Launchpad)"
-#define DFU_IFACE_STRING	"lolwut"
+#define DFU_IDENT               "Black Magic Firmware Upgrade (SAMD)"
+#define DFU_IFACE_STRING	"hid"
 
 extern uint8_t running_status;
 
@@ -73,37 +73,55 @@ extern uint8_t running_status;
 
 #else
 
-#define LED_PORT	PORTA
-#define LED_IDLE_RUN	GPIO11
-#define LED_ERROR	GPIO10
-
-#define TMS_PORT	PORTA
+/* Hardware definitions... */
+#define JTAG_PORT 	PORTA
+#define TDI_PORT	JTAG_PORT
+#define TMS_DIR_PORT	JTAG_PORT
+#define TMS_PORT	JTAG_PORT
+#define TCK_PORT	JTAG_PORT
+#define TDO_PORT	JTAG_PORT
+#define TMS_DIR_PIN	GPIO15
 #define TMS_PIN		GPIO31
-
-#define TCK_PORT	PORTA
 #define TCK_PIN		GPIO30
-
-#define TDI_PORT	PORTA
 #define TDI_PIN		GPIO5
-
-#define TDO_PORT	PORTA
 #define TDO_PIN		GPIO4
 
-#define SWO_PORT	PORTA
-#define SWO_PIN		GPIO6
-
-#define SWDIO_PORT	PORTA
+#define SWDIO_DIR_PORT	JTAG_PORT
+#define SWDIO_PORT 	JTAG_PORT
+#define SWCLK_PORT 	JTAG_PORT
+#define SWDIO_DIR_PIN	TMS_DIR_PIN
 #define SWDIO_PIN	TMS_PIN
 #define SWDIO_PIN_NUM	31
-
-#define SWCLK_PORT	PORTA
 #define SWCLK_PIN	TCK_PIN
 
-#define SRST_PORT	PORTA
-#define SRST_PIN	GPIO26
+#define TRST_PORT	PORTA
+#define TRST_PIN	GPIO27
+#define PWR_BR_PORT	GPIOA
+#define PWR_BR_PIN	GPIO28
+#define SRST_PORT	GPIOA
+#define SRST_PIN	GPIO8
+#define SRST_SENSE_PORT	GPIOA
+#define SRST_SENSE_PIN	GPIO9
+#define TRGT_SENSE	GPIO2
 
+#define LED_PORT	GPIOA
 #define LED_PORT_UART	PORTA
-#define LED_UART	GPIO12
+#define LED_0		GPIO10
+#define LED_1		GPIO11
+#define LED_2		GPIO14
+#define LED_UART	LED_1	/* Orange */
+#define LED_IDLE_RUN	LED_0	/* Yellow */
+#define LED_ERROR	LED_2	/* Red */
+
+#define UART_TX_PIN	GPIO8
+#define UART_RX_PIN	GPIO9
+#define UART_PERIPH	SOC_GPIO_PERIPH_C
+
+#define LED_PORT	PORTA
+#define LED_IDLE_RUN	GPIO11
+
+#define SWO_PORT	JTAG_PORT
+#define SWO_PIN		SWD_PIN
 
 #endif
 
