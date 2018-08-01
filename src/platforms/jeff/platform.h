@@ -72,7 +72,7 @@ extern uint8_t running_status;
 #define LED_UART	GPIO12
 
 #define UART_TX_PIN	GPIO4
-#define UART_RX_PIN	GPI05
+#define UART_RX_PIN	GPIO5
 #define UART_PERIPH	SOC_GPIO_PERIPH_D
 
 #else
