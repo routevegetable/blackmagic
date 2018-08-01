@@ -4,6 +4,7 @@ OBJCOPY = $(CROSS_COMPILE)objcopy
 
 
 ifeq ($(ENABLE_DEBUG), 1)
+CFLAGS += -DDEBUG_ME
 CFLAGS += -DENABLE_DEBUG
 endif
 
