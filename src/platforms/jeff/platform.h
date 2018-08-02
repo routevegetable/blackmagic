@@ -44,29 +44,29 @@ extern uint8_t running_status;
 #define LED_ERROR	GPIO10
 
 #define TMS_PORT	PORTA
-#define TMS_PIN		GPIO7
+#define TMS_PIN		GPIO1
 
 #define TCK_PORT	PORTA
-#define TCK_PIN		GPIO5
+#define TCK_PIN		GPIO2
 
 #define TDI_PORT	PORTA
 #define TDI_PIN		GPIO3
 
 #define TDO_PORT	PORTA
-#define TDO_PIN		GPIO2
+#define TDO_PIN		GPIO3
 
 #define SWO_PORT	PORTA
 #define SWO_PIN		GPIO6
 
 #define SWDIO_PORT	PORTA
 #define SWDIO_PIN	TMS_PIN
-#define SWDIO_PIN_NUM	7
+#define SWDIO_PIN_NUM	1
 
 #define SWCLK_PORT	PORTA
 #define SWCLK_PIN	TCK_PIN
 
 #define SRST_PORT	PORTA
-#define SRST_PIN	GPIO6
+#define SRST_PIN	GPIO7
 
 #define LED_PORT_UART	PORTA
 #define LED_UART	GPIO12

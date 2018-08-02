@@ -52,9 +52,9 @@ void sys_tick_handler(void)
 	if(running_status)
 		gpio_toggle(LED_PORT, LED_IDLE_RUN);
 
-	time_ms += 1;
+	time_ms += 10;
 
-	uart_pop();
+	//uart_pop();
 }
 
 uint32_t platform_time_ms(void)
@@ -81,7 +81,7 @@ static uint32_t timing_init(void)
 	uint32_t cal = 0;
 
 	systick_set_clocksource(STK_CSR_CLKSOURCE_AHB);
-	systick_set_reload(48000);	/* Interrupt us at 10 Hz */
+	systick_set_reload(4800);	/* Interrupt us at 10 Hz */
 	systick_interrupt_enable();
 
 	systick_counter_enable();
