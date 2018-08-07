@@ -27,13 +27,16 @@
 #include <libopencm3/sam/d/port.h>
 #include <libopencm3/sam/d/gclk.h>
 #include <libopencm3/sam/d/pm.h>
+#include <libopencm3/sam/d/uart.h>
+#include <libopencm3/sam/d/adc.h>
 
 #include <libopencm3/cm3/systick.h>
 #include <libopencm3/cm3/scb.h>
 
 static struct gclk_hw clock = {
 	.gclk0 = SRC_DFLL48M,
-	.gclk1 = SRC_DFLL48M,
+	.gclk1 = SRC_OSC8M,
+	.gclk1_div = 30,      /* divide clock for ADC  */
 	.gclk2 = SRC_DFLL48M,
 	.gclk3 = SRC_DFLL48M,
 	.gclk4 = SRC_DFLL48M,
@@ -88,11 +91,27 @@ static uint32_t timing_init(void)
 	return cal;
 }
 
+static void adc_init(void)
+{
+	gpio_config_special(ADC_PORT, ADC_POS_PIN, SOC_GPIO_PERIPH_B); /* +input */
+        gpio_config_special(ADC_PORT, ADC_REF_PIN, SOC_GPIO_PERIPH_B); /* reference */
+        //gpio_config_special(PORTA, GPIO6, SOC_GPIO_PERIPH_B); /* ground (-input) */
+
+	set_periph_clk(GCLK1, GCLK_ID_ADC);
+        periph_clk_en(GCLK_ID_ADC, 1);
+
+	//adc_enable(ADC_REFCTRL_VREFA,0,ADC_INPUTCTRL_PIN6,ADC_INPUTCTRL_PIN16);
+	adc_enable(ADC_REFCTRL_VREFA,0,ADC_INPUTCTRL_GND,ADC_INPUTCTRL_PIN16);
+}
+
 void platform_init(void)
 {
 	gclk_init(&clock);
 
 	usb_setup();
+
+	gpio_config_special(TCK_PORT, TCK_PIN, SOC_GPIO_NONE);
+	//gpio_config_special(TMS_PORT, TMS_PIN, SOC_GPIO_NONE);
 
 	gpio_config_output(LED_PORT, LED_IDLE_RUN, 0);
 	gpio_config_output(TMS_PORT, TMS_PIN, 0);
@@ -119,6 +138,7 @@ void platform_init(void)
 	timing_init();
 	usbuart_init();
 	cdcacm_init();
+	adc_init();
 }
 
 void platform_srst_set_val(bool assert)
@@ -146,7 +166,19 @@ void platform_delay(uint32_t ms)
 
 const char *platform_target_voltage(void)
 {
-	return "not supported";
+	uint32_t voltage;
+	static char out[] = "0.0V";
+
+	adc_start();
+
+	while (!(1&(ADC->intflag)));
+	voltage = ((330*adc_result())>>12);
+
+	out[0] = '0' + (char)(voltage/100);
+	out[2] = '0' + (char)((voltage/10) % 10);
+
+	return out;
+	//return "not supported";
 }
 
 char *serialno_read(char *s)
@@ -172,4 +204,24 @@ char *serialno_read(char *s)
 
 void platform_request_boot(void)
 {
+}
+
+void platform_convert_tdio(void)
+{
+#if 0
+        gpio_config_special(PORTA, GPIO16, SOC_GPIO_PERIPH_C); /* TX */
+        gpio_config_special(PORTA, GPIO19, SOC_GPIO_PERIPH_C); /* RX */
+
+	/* Select and Enable system clock */
+        set_periph_clk(GCLK0, GCLK_ID_SERCOM1_CORE); // TODO which GCLK#?
+        periph_clk_en(GCLK_ID_SERCOM1_CORE, 1);
+
+        usart_enable(1, 115200);
+
+        usart_enable_rx_interrupt(1);
+        usart_enable_tx_interrupt(1);
+#else
+	//gpio_config_special(TMS_PORT, TMS_PIN, SOC_GPIO_PERIPH_G);
+	gpio_config_special(TCK_PORT, TCK_PIN, SOC_GPIO_PERIPH_G);
+#endif
 }

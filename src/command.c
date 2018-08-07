@@ -61,6 +61,9 @@ static bool cmd_traceswo(void);
 #ifdef PLATFORM_HAS_DEBUG
 static bool cmd_debug_bmp(target *t, int argc, const char **argv);
 #endif
+#ifdef PLATFORM_HAS_UART_WHEN_SWDP
+static bool cmd_convert_tdio(target *t, int argc, const char **argv);
+#endif
 
 const struct command_s cmd_list[] = {
 	{"version", (cmd_handler)cmd_version, "Display firmware version info"},
@@ -79,6 +82,9 @@ const struct command_s cmd_list[] = {
 #endif
 #ifdef PLATFORM_HAS_DEBUG
 	{"debug_bmp", (cmd_handler)cmd_debug_bmp, "Output BMP \"debug\" strings to the second vcom: (enable|disable)"},
+#endif
+#ifdef PLATFORM_HAS_UART_WHEN_SWDP
+	{"convert_tdio", (cmd_handler)cmd_convert_tdio,"Switch TDI/O pins to UART TX/RX functions"},
 #endif
 	{NULL, NULL, NULL}
 };
@@ -295,6 +301,18 @@ static bool cmd_debug_bmp(target *t, int argc, const char **argv)
 	}
 	gdb_outf("Debug mode is %s\n",
 		 debug_bmp ? "enabled" : "disabled");
+	return true;
+}
+#endif
+
+#ifdef PLATFORM_HAS_UART_WHEN_SWDP
+static bool cmd_convert_tdio(target *t, int argc, const char **argv)
+{
+        (void)t;
+        (void) argv;
+        (void) argc;
+        platform_convert_tdio();
+
 	return true;
 }
 #endif

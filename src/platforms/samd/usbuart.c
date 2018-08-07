@@ -87,8 +87,18 @@ void usbuart_init(void)
 
 void usbuart_set_line_coding(struct usb_cdc_line_coding *coding)
 {
-	/* Not supported yet, only 115200 8bits/etc */
-	(void) coding;
+	uint8_t sbmode = (coding->bCharFormat == 2) ? 1 : 0;
+	uint8_t parity = (coding->bParityType == 1) ? 0 : 1;
+	uint8_t form   = (coding->bParityType) ? 1 : 0;
+	uint8_t chsize = (form) ? coding->bDataBits + 1 : coding->bDataBits;
+
+	/* set baud rate */
+	usart_set_baudrate(USART_NUM, coding->dwDTERate);
+
+	/* set data size, stop mode, and parity */
+	usart_set_chsize(USART_NUM, chsize);
+	usart_set_sbmode(USART_NUM, sbmode);
+	usart_set_parity(USART_NUM, parity, form);
 }
 
 void usbuart_usb_out_cb(usbd_device *dev, uint8_t ep)

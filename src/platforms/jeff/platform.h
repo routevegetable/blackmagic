@@ -29,6 +29,7 @@
 
 //#define PLATFORM_HAS_DEBUG
 //#define USBUART_DEBUG
+#define PLATFORM_HAS_UART_WHEN_SWDP
 
 #define BOARD_IDENT             "Black Magic Probe (SAMD), (Firmware " FIRMWARE_VERSION ")"
 #define BOARD_IDENT_DFU		"Black Magic (Upgrade) for Launchpad, (Firmware " FIRMWARE_VERSION ")"
@@ -75,6 +76,10 @@ extern uint8_t running_status;
 #define UART_RX_PIN	GPIO5
 #define UART_PERIPH	SOC_GPIO_PERIPH_D
 
+#define ADC_PORT	PORTA
+#define ADC_REF_PIN	GPIO3
+#define ADC_POS_PIN	GPIO8
+
 #else
 
 /* Hardware definitions... */
@@ -85,8 +90,8 @@ extern uint8_t running_status;
 #define TCK_PORT	JTAG_PORT
 #define TDO_PORT	JTAG_PORT
 #define TMS_DIR_PIN	GPIO15
-#define TMS_PIN		GPIO31
-#define TCK_PIN		GPIO30
+#define TMS_PIN		GPIO0
+#define TCK_PIN		GPIO1
 #define TDI_PIN		GPIO5
 #define TDO_PIN		GPIO4
 
@@ -95,7 +100,7 @@ extern uint8_t running_status;
 #define SWCLK_PORT 	JTAG_PORT
 #define SWDIO_DIR_PIN	TMS_DIR_PIN
 #define SWDIO_PIN	TMS_PIN
-#define SWDIO_PIN_NUM	31
+#define SWDIO_PIN_NUM	0
 #define SWCLK_PIN	TCK_PIN
 
 #define TRST_PORT	PORTA
@@ -113,6 +118,7 @@ extern uint8_t running_status;
 #define LED_0		GPIO10
 #define LED_1		GPIO11
 #define LED_2		GPIO14
+//#define LED_2		GPIO13
 #define LED_UART	LED_1	/* Orange */
 #define LED_IDLE_RUN	LED_0	/* Yellow */
 #define LED_ERROR	LED_2	/* Red */
@@ -123,6 +129,10 @@ extern uint8_t running_status;
 
 #define SWO_PORT	JTAG_PORT
 #define SWO_PIN		SWD_PIN
+
+#define ADC_PORT	PORTA
+#define ADC_REF_PIN	GPIO3
+#define ADC_POS_PIN	TRGT_SENSE
 
 #endif
 
@@ -186,4 +196,5 @@ static inline int platform_hwversion(void)
 }
 
 void uart_pop(void);
+void platform_convert_tdio(void);
 #endif
