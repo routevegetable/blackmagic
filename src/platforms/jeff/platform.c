@@ -95,13 +95,11 @@ static void adc_init(void)
 {
 	gpio_config_special(ADC_PORT, ADC_POS_PIN, SOC_GPIO_PERIPH_B); /* +input */
         gpio_config_special(ADC_PORT, ADC_REF_PIN, SOC_GPIO_PERIPH_B); /* reference */
-        //gpio_config_special(PORTA, GPIO6, SOC_GPIO_PERIPH_B); /* ground (-input) */
 
 	set_periph_clk(GCLK1, GCLK_ID_ADC);
         periph_clk_en(GCLK_ID_ADC, 1);
 
-	//adc_enable(ADC_REFCTRL_VREFA,0,ADC_INPUTCTRL_PIN6,ADC_INPUTCTRL_PIN16);
-	adc_enable(ADC_REFCTRL_VREFA,0,ADC_INPUTCTRL_GND,ADC_INPUTCTRL_PIN16);
+	adc_enable(ADC_REFCTRL_VREFA,0,ADC_INPUTCTRL_GND,ADC_MUXPOS);
 }
 
 void platform_init(void)
@@ -110,13 +108,15 @@ void platform_init(void)
 
 	usb_setup();
 
-	gpio_config_special(TCK_PORT, TCK_PIN, SOC_GPIO_NONE);
+	//gpio_config_special(TCK_PORT, TCK_PIN, SOC_GPIO_NONE);
 	//gpio_config_special(TMS_PORT, TMS_PIN, SOC_GPIO_NONE);
 
 	gpio_config_output(LED_PORT, LED_IDLE_RUN, 0);
 	gpio_config_output(TMS_PORT, TMS_PIN, 0);
 	gpio_config_output(TCK_PORT, TCK_PIN, 0);
 	gpio_config_output(TDI_PORT, TDI_PIN, 0);
+
+	gpio_config_output(TMS_PORT, TMS_DIR_PIN, 0);
 
 	/* enable both input and output with pullup disabled by default */
 	PORT_DIRSET(SWDIO_PORT) = SWDIO_PIN;
@@ -129,11 +129,25 @@ void platform_init(void)
 
 	gpio_config_input(TDO_PORT, TDO_PIN, 0);
 	gpio_config_output(SRST_PORT, SRST_PIN, GPIO_OUT_FLAG_DEFAULT_HIGH);
-	gpio_set(SRST_PORT, SRST_PIN);
+	gpio_clear(SRST_PORT, SRST_PIN);
 
 	/* setup uart led, disable by default*/
 	gpio_config_output(LED_PORT_UART, LED_UART, 0);//GPIO_OUT_FLAG_DEFAULT_HIGH);
 	gpio_clear(LED_PORT_UART, LED_UART);
+
+
+	/* NOT SURE IF NEED THIS */
+	/* Enable internal pull-up on PWR_BR so that we don't drive
+	   TPWR locally or inadvertently supply power to the target. */
+	/*
+	if (1) {
+		gpio_set(PWR_BR_PORT, PWR_BR_PIN);
+		gpio_config_input(PWR_BR_PORT, PWR_BR_PIN, GPIO_IN_FLAG_PULLUP);
+	} else {
+		gpio_set(PWR_BR_PORT, PWR_BR_PIN);
+		gpio_set_mode(PWR_BR_PORT, GPIO_MODE_OUTPUT_50_MHZ,
+			      GPIO_CNF_OUTPUT_OPENDRAIN, PWR_BR_PIN);
+			      }*/
 
 	timing_init();
 	usbuart_init();
@@ -144,7 +158,7 @@ void platform_init(void)
 void platform_srst_set_val(bool assert)
 {
 	volatile int i;
-	if (assert) {
+	if (!assert) {
 		gpio_clear(SRST_PORT, SRST_PIN);
 		for(i = 0; i < 10000; i++) asm("nop");
 	} else {
@@ -154,7 +168,7 @@ void platform_srst_set_val(bool assert)
 
 bool platform_srst_get_val(void)
 {
-	return gpio_get(SRST_PORT, SRST_PIN) == 0;
+	return gpio_get(SRST_PORT, SRST_PIN) != 0;
 }
 
 void platform_delay(uint32_t ms)
@@ -172,7 +186,7 @@ const char *platform_target_voltage(void)
 	adc_start();
 
 	while (!(1&(ADC->intflag)));
-	voltage = ((330*adc_result())>>12);
+	voltage = ((485*adc_result())>>12); /* 330 without divider, 485 with it */
 
 	out[0] = '0' + (char)(voltage/100);
 	out[2] = '0' + (char)((voltage/10) % 10);
@@ -204,24 +218,4 @@ char *serialno_read(char *s)
 
 void platform_request_boot(void)
 {
-}
-
-void platform_convert_tdio(void)
-{
-#if 0
-        gpio_config_special(PORTA, GPIO16, SOC_GPIO_PERIPH_C); /* TX */
-        gpio_config_special(PORTA, GPIO19, SOC_GPIO_PERIPH_C); /* RX */
-
-	/* Select and Enable system clock */
-        set_periph_clk(GCLK0, GCLK_ID_SERCOM1_CORE); // TODO which GCLK#?
-        periph_clk_en(GCLK_ID_SERCOM1_CORE, 1);
-
-        usart_enable(1, 115200);
-
-        usart_enable_rx_interrupt(1);
-        usart_enable_tx_interrupt(1);
-#else
-	//gpio_config_special(TMS_PORT, TMS_PIN, SOC_GPIO_PERIPH_G);
-	gpio_config_special(TCK_PORT, TCK_PIN, SOC_GPIO_PERIPH_G);
-#endif
 }

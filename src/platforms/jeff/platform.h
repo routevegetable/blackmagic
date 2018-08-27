@@ -46,6 +46,7 @@ extern uint8_t running_status;
 
 #define TMS_PORT	PORTA
 #define TMS_PIN		GPIO1
+#define TMS_DIR_PIN	GPIO9
 
 #define TCK_PORT	PORTA
 #define TCK_PIN		GPIO2
@@ -79,6 +80,7 @@ extern uint8_t running_status;
 #define ADC_PORT	PORTA
 #define ADC_REF_PIN	GPIO3
 #define ADC_POS_PIN	GPIO8
+#define ADC_MUXPOS	16
 
 #else
 
@@ -91,9 +93,9 @@ extern uint8_t running_status;
 #define TDO_PORT	JTAG_PORT
 #define TMS_DIR_PIN	GPIO15
 #define TMS_PIN		GPIO0
-#define TCK_PIN		GPIO1
-#define TDI_PIN		GPIO5
-#define TDO_PIN		GPIO4
+#define TCK_PIN		GPIO6
+#define TDI_PIN		GPIO16
+#define TDO_PIN		GPIO19
 
 #define SWDIO_DIR_PORT	JTAG_PORT
 #define SWDIO_PORT 	JTAG_PORT
@@ -105,7 +107,7 @@ extern uint8_t running_status;
 
 #define TRST_PORT	PORTA
 #define TRST_PIN	GPIO27
-#define PWR_BR_PORT	GPIOA
+#define PWR_BR_PORT	PORTA
 #define PWR_BR_PIN	GPIO28
 #define SRST_PORT	PORTA
 #define SRST_PIN	GPIO8
@@ -124,7 +126,7 @@ extern uint8_t running_status;
 #define LED_ERROR	LED_2	/* Red */
 
 #define UART_TX_PIN	GPIO4
-#define UART_RX_PIN	GPIO5
+#define UART_RX_PIN	GPIO7
 #define UART_PERIPH	SOC_GPIO_PERIPH_D
 
 #define SWO_PORT	JTAG_PORT
@@ -132,20 +134,24 @@ extern uint8_t running_status;
 
 #define ADC_PORT	PORTA
 #define ADC_REF_PIN	GPIO3
-#define ADC_POS_PIN	TRGT_SENSE
+#define ADC_POS_PIN	GPIO2
+#define ADC_MUXPOS	0
 
 #endif
 
 #define TMS_SET_MODE()	{ \
 	gpio_config_output(TMS_PORT, TMS_PIN, 0); \
+	gpio_set(TMS_PORT, TMS_DIR_PIN); \
 }
 
 #define SWDIO_MODE_FLOAT() do { \
 	PORT_DIRCLR(SWDIO_PORT) = SWDIO_PIN; \
 	gpio_set(SWDIO_PORT, SWDIO_PIN); \
+	gpio_clear(TMS_PORT, TMS_DIR_PIN); \
 } while(0)
 #define SWDIO_MODE_DRIVE() do { \
 	PORT_DIRSET(SWDIO_PORT) = SWDIO_PIN; \
+	gpio_set(TMS_PORT, TMS_DIR_PIN); \
 } while(0)
 
 /* extern usbd_driver samd21_usb_driver; */
@@ -196,5 +202,5 @@ static inline int platform_hwversion(void)
 }
 
 void uart_pop(void);
-void platform_convert_tdio(void);
+void usbuart_convert_tdio(void);
 #endif

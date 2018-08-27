@@ -39,8 +39,10 @@
 
 #include "queue.h"
 
-#define USART_NUM	0
 #define Q_SIZE		1024
+
+//#define USART_NUM 0
+static uint8_t USART_NUM = 0;
 
 usbd_device * usbdev;
 
@@ -85,20 +87,60 @@ void usbuart_init(void)
 	usart_enable_tx_interrupt(USART_NUM);
 }
 
+void usbuart_convert_tdio(void)
+{
+#if 1
+	if (USART_NUM) {
+		usart_disable(1);
+		USART_NUM = 0;
+		usbuart_init();
+		return;
+	}
+#endif
+        gpio_config_special(PORTA, TDI_PIN, SOC_GPIO_PERIPH_C); /* TX */
+	gpio_config_special(PORTA, TDO_PIN, SOC_GPIO_PERIPH_C); /* RX */
+
+        /* disable USART0 (we will be using USART1 now) */
+        usart_disable(0);
+
+	USART_NUM = 1;
+
+        /* Select and Enable system clock */
+	set_periph_clk(GCLK0, GCLK_ID_SERCOM1_CORE);
+        periph_clk_en(GCLK_ID_SERCOM1_CORE, 1);
+
+	usart_setup(1, 115200);
+        usart_set_pads(1, 3, 0); /* uses different pads than the default */
+	usart_enable(1, 0); /* baud==0 so setup is skipped */
+
+        usart_enable_rx_interrupt(1);
+        usart_enable_tx_interrupt(1);
+}
+
 void usbuart_set_line_coding(struct usb_cdc_line_coding *coding)
 {
+#if 1
 	uint8_t sbmode = (coding->bCharFormat == 2) ? 1 : 0;
 	uint8_t parity = (coding->bParityType == 1) ? 0 : 1;
 	uint8_t form   = (coding->bParityType) ? 1 : 0;
 	uint8_t chsize = (form) ? coding->bDataBits + 1 : coding->bDataBits;
 
+	usart_disable(USART_NUM);
+	usart_setup(USART_NUM, coding->dwDTERate);
+
 	/* set baud rate */
-	usart_set_baudrate(USART_NUM, coding->dwDTERate);
+	//usart_set_baudrate(USART_NUM, coding->dwDTERate);
 
 	/* set data size, stop mode, and parity */
 	usart_set_chsize(USART_NUM, chsize);
 	usart_set_sbmode(USART_NUM, sbmode);
 	usart_set_parity(USART_NUM, parity, form);
+
+	usart_enable(USART_NUM, 0);
+#else
+	(void) coding;
+	return;
+#endif
 }
 
 void usbuart_usb_out_cb(usbd_device *dev, uint8_t ep)

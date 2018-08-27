@@ -311,7 +311,7 @@ static bool cmd_convert_tdio(target *t, int argc, const char **argv)
         (void)t;
         (void) argv;
         (void) argc;
-        platform_convert_tdio();
+        usbuart_convert_tdio();
 
 	return true;
 }
