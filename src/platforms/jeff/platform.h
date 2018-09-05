@@ -46,16 +46,16 @@ extern uint8_t running_status;
 
 #define TMS_PORT	PORTA
 #define TMS_PIN		GPIO1
-#define TMS_DIR_PIN	GPIO9
+#define TMS_DIR_PIN	GPIO5
 
 #define TCK_PORT	PORTA
 #define TCK_PIN		GPIO2
 
 #define TDI_PORT	PORTA
-#define TDI_PIN		GPIO3
+#define TDI_PIN		GPIO16
 
 #define TDO_PORT	PORTA
-#define TDO_PIN		GPIO3
+#define TDO_PIN		GPIO19
 
 #define SWO_PORT	PORTA
 #define SWO_PIN		GPIO6
@@ -73,14 +73,15 @@ extern uint8_t running_status;
 #define LED_PORT_UART	PORTA
 #define LED_UART	GPIO12
 
-#define UART_TX_PIN	GPIO4
-#define UART_RX_PIN	GPIO5
-#define UART_PERIPH	SOC_GPIO_PERIPH_D
+#define UART_TX_PIN	GPIO8
+#define UART_RX_PIN	GPIO9
+#define UART_PERIPH	SOC_GPIO_PERIPH_C
+#define UART_PERIPH_2	SOC_GPIO_PERIPH_C
 
 #define ADC_PORT	PORTA
 #define ADC_REF_PIN	GPIO3
-#define ADC_POS_PIN	GPIO8
-#define ADC_MUXPOS	16
+#define ADC_POS_PIN	GPIO4
+#define ADC_MUXPOS	4
 
 #else
 
@@ -128,6 +129,7 @@ extern uint8_t running_status;
 #define UART_TX_PIN	GPIO4
 #define UART_RX_PIN	GPIO7
 #define UART_PERIPH	SOC_GPIO_PERIPH_D
+#define UART_PERIPH_2	SOC_GPIO_PERIPH_C
 
 #define SWO_PORT	JTAG_PORT
 #define SWO_PIN		SWD_PIN
@@ -202,5 +204,5 @@ static inline int platform_hwversion(void)
 }
 
 void uart_pop(void);
-void usbuart_convert_tdio(void);
+int usbuart_convert_tdio(uint32_t arg);
 #endif

@@ -57,7 +57,7 @@ void sys_tick_handler(void)
 
 	time_ms += 10;
 
-	//uart_pop();
+	uart_pop();
 }
 
 uint32_t platform_time_ms(void)

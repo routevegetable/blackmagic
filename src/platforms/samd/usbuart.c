@@ -41,8 +41,11 @@
 
 #define Q_SIZE		1024
 
-//#define USART_NUM 0
+/* Active USART number */
 static uint8_t USART_NUM = 0;
+
+/* Current Baud Rate setting */
+static uint32_t current_baud = 115200;
 
 usbd_device * usbdev;
 
@@ -78,27 +81,30 @@ void usbuart_init(void)
 	gpio_config_special(PORTA, UART_TX_PIN, UART_PERIPH); /* tx pin */
 	gpio_config_special(PORTA, UART_RX_PIN, UART_PERIPH); /* rx pin */
 
-	/* enable clocking to sercom3 */
+	/* enable clocking to sercom0 */
 	set_periph_clk(GCLK0, GCLK_ID_SERCOM0_CORE);
 	periph_clk_en(GCLK_ID_SERCOM0_CORE, 1);
 
-	usart_enable(USART_NUM, 115200);
+	usart_enable(USART_NUM, current_baud);
 	usart_enable_rx_interrupt(USART_NUM);
 	usart_enable_tx_interrupt(USART_NUM);
 }
 
-void usbuart_convert_tdio(void)
+int usbuart_convert_tdio(uint32_t arg)
 {
 #if 1
+
+	(void) arg;
+
 	if (USART_NUM) {
 		usart_disable(1);
 		USART_NUM = 0;
 		usbuart_init();
-		return;
+		return current_baud;
 	}
-#endif
-        gpio_config_special(PORTA, TDI_PIN, SOC_GPIO_PERIPH_C); /* TX */
-	gpio_config_special(PORTA, TDO_PIN, SOC_GPIO_PERIPH_C); /* RX */
+
+        gpio_config_special(PORTA, TDI_PIN, UART_PERIPH_2); /* TX */
+	gpio_config_special(PORTA, TDO_PIN, UART_PERIPH_2); /* RX */
 
         /* disable USART0 (we will be using USART1 now) */
         usart_disable(0);
@@ -109,27 +115,40 @@ void usbuart_convert_tdio(void)
 	set_periph_clk(GCLK0, GCLK_ID_SERCOM1_CORE);
         periph_clk_en(GCLK_ID_SERCOM1_CORE, 1);
 
-	usart_setup(1, 115200);
+	usart_setup(1, current_baud);
         usart_set_pads(1, 3, 0); /* uses different pads than the default */
 	usart_enable(1, 0); /* baud==0 so setup is skipped */
 
         usart_enable_rx_interrupt(1);
         usart_enable_tx_interrupt(1);
+
+	return current_baud;
+
+	/* FOR TESTING PURPOSES ONLY */
+#else
+	if (arg){
+		usart_disable(USART_NUM);
+		usart_set_baudrate(USART_NUM, arg);
+		usart_enable(USART_NUM, 0);
+		current_baud = arg;
+	} else
+		usart_send(0, 65);
+
+	return current_baud;
+#endif
 }
 
 void usbuart_set_line_coding(struct usb_cdc_line_coding *coding)
 {
-#if 1
 	uint8_t sbmode = (coding->bCharFormat == 2) ? 1 : 0;
 	uint8_t parity = (coding->bParityType == 1) ? 0 : 1;
 	uint8_t form   = (coding->bParityType) ? 1 : 0;
 	uint8_t chsize = (form) ? coding->bDataBits + 1 : coding->bDataBits;
 
 	usart_disable(USART_NUM);
-	usart_setup(USART_NUM, coding->dwDTERate);
 
 	/* set baud rate */
-	//usart_set_baudrate(USART_NUM, coding->dwDTERate);
+	usart_set_baudrate(USART_NUM, coding->dwDTERate);
 
 	/* set data size, stop mode, and parity */
 	usart_set_chsize(USART_NUM, chsize);
@@ -137,10 +156,8 @@ void usbuart_set_line_coding(struct usb_cdc_line_coding *coding)
 	usart_set_parity(USART_NUM, parity, form);
 
 	usart_enable(USART_NUM, 0);
-#else
-	(void) coding;
-	return;
-#endif
+
+	current_baud = coding->dwDTERate;
 }
 
 void usbuart_usb_out_cb(usbd_device *dev, uint8_t ep)
@@ -183,9 +200,9 @@ void usbuart_usb_in_cb(usbd_device *dev, uint8_t ep)
 static void uart_rx_irq(void)
 {
 	char c = UART(USART_NUM)->data;
-		
+
 	/* bug?, need to re-enable rx complete interrupt */
-	INSERTBF(UART_INTENSET_RXC, 1, UART(0)->intenset);
+	INSERTBF(UART_INTENSET_RXC, 1, UART(USART_NUM)->intenset);
 
 	if (!qfull(rx.head, rx.tail, Q_SIZE)) {
 		rx.buf[rx.head] = c;
@@ -205,6 +222,19 @@ static void uart_tx_irq(void)
 
 void sercom0_isr(void)
 {
+	/* Turn on LED */
+	gpio_set(LED_PORT_UART, LED_UART);
+
+	if (GETBF(UART_INTFLAG_RXC, UART(USART_NUM)->intflag))
+		uart_rx_irq();
+
+	if (GETBF(UART_INTFLAG_DRE, UART(USART_NUM)->intflag))
+		uart_tx_irq();
+}
+
+void sercom1_isr(void)
+{
+
 	/* Turn on LED */
 	gpio_set(LED_PORT_UART, LED_UART);
 

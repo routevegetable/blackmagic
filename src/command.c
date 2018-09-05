@@ -309,9 +309,15 @@ static bool cmd_debug_bmp(target *t, int argc, const char **argv)
 static bool cmd_convert_tdio(target *t, int argc, const char **argv)
 {
         (void)t;
-        (void) argv;
         (void) argc;
-        usbuart_convert_tdio();
+
+	uint32_t res = 0;
+
+	if (argc > 1)
+		res = usbuart_convert_tdio(atoi(argv[1]));
+	else
+		res = usbuart_convert_tdio(0);
+	gdb_outf("BAUD: %d\n", res);
 
 	return true;
 }
