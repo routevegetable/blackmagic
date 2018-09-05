@@ -85,7 +85,11 @@ void usbuart_init(void)
 	set_periph_clk(GCLK0, GCLK_ID_SERCOM0_CORE);
 	periph_clk_en(GCLK_ID_SERCOM0_CORE, 1);
 
-	usart_enable(USART_NUM, current_baud);
+	//usart_enable(USART_NUM, current_baud);
+	usart_setup(USART_NUM, current_baud);
+        usart_set_pads(USART_NUM, 3, 0); /* uses different pads than the default */
+	usart_enable(USART_NUM, 0); /* baud==0 so setup is skipped */
+
 	usart_enable_rx_interrupt(USART_NUM);
 	usart_enable_tx_interrupt(USART_NUM);
 }
