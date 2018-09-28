@@ -94,12 +94,37 @@ static uint32_t timing_init(void)
 static void adc_init(void)
 {
 	gpio_config_special(ADC_PORT, ADC_POS_PIN, SOC_GPIO_PERIPH_B); /* +input */
-        gpio_config_special(ADC_PORT, ADC_REF_PIN, SOC_GPIO_PERIPH_B); /* reference */
+	gpio_config_special(ADC_PORT, ADC_REF_PIN, SOC_GPIO_PERIPH_B); /* reference */
 
 	set_periph_clk(GCLK1, GCLK_ID_ADC);
-        periph_clk_en(GCLK_ID_ADC, 1);
+	periph_clk_en(GCLK_ID_ADC, 1);
 
 	adc_enable(ADC_REFCTRL_VREFA,0,ADC_INPUTCTRL_GND,ADC_MUXPOS);
+}
+
+#define EIC 0x40001800
+#define EIC_CONFIG1 0x4000181C
+#define EIC_INTENSET 0x4000180C
+
+static void button_init(void)
+{
+	gpio_config_special(BUTTON_PORT, BUTTON_PIN, SOC_GPIO_PERIPH_A);
+
+	INSERTBF(PM_APBAMASK_EIC, 1, PM->apbamask);
+
+	set_periph_clk(GCLK0, GCLK_ID_EIC);
+	periph_clk_en(GCLK_ID_EIC, 1);
+
+	/* configure falling edge */
+	//EIC->evctrl = (1<<15);
+	*((uint32_t*)EIC_CONFIG1) = (2<<28);
+
+	/* enable the IEC */
+	*((uint8_t*)EIC) = (1<<1);
+
+	/* enable interrupts */
+	*((uint32_t*)EIC_INTENSET) = (1<<15);
+	nvic_enable_irq(NVIC_EIC_IRQ);
 }
 
 void platform_init(void)
@@ -107,9 +132,6 @@ void platform_init(void)
 	gclk_init(&clock);
 
 	usb_setup();
-
-	//gpio_config_special(TCK_PORT, TCK_PIN, SOC_GPIO_NONE);
-	//gpio_config_special(TMS_PORT, TMS_PIN, SOC_GPIO_NONE);
 
 	gpio_config_output(LED_PORT, LED_IDLE_RUN, 0);
 	gpio_config_output(TMS_PORT, TMS_PIN, 0);
@@ -136,23 +158,11 @@ void platform_init(void)
 	gpio_clear(LED_PORT_UART, LED_UART);
 
 
-	/* NOT SURE IF NEED THIS */
-	/* Enable internal pull-up on PWR_BR so that we don't drive
-	   TPWR locally or inadvertently supply power to the target. */
-	/*
-	if (1) {
-		gpio_set(PWR_BR_PORT, PWR_BR_PIN);
-		gpio_config_input(PWR_BR_PORT, PWR_BR_PIN, GPIO_IN_FLAG_PULLUP);
-	} else {
-		gpio_set(PWR_BR_PORT, PWR_BR_PIN);
-		gpio_set_mode(PWR_BR_PORT, GPIO_MODE_OUTPUT_50_MHZ,
-			      GPIO_CNF_OUTPUT_OPENDRAIN, PWR_BR_PIN);
-			      }*/
-
 	timing_init();
 	usbuart_init();
 	cdcacm_init();
 	adc_init();
+	button_init();
 }
 
 void platform_srst_set_val(bool assert)
@@ -192,7 +202,6 @@ const char *platform_target_voltage(void)
 	out[2] = '0' + (char)((voltage/10) % 10);
 
 	return out;
-	//return "not supported";
 }
 
 char *serialno_read(char *s)
@@ -218,4 +227,10 @@ char *serialno_read(char *s)
 
 void platform_request_boot(void)
 {
+}
+
+void eic_isr(void)
+{
+	
+	scb_reset_system();
 }

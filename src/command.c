@@ -64,6 +64,9 @@ static bool cmd_debug_bmp(target *t, int argc, const char **argv);
 #ifdef PLATFORM_HAS_UART_WHEN_SWDP
 static bool cmd_convert_tdio(target *t, int argc, const char **argv);
 #endif
+#ifdef PLATFORM_HAS_BOOTLOADER
+static bool cmd_enter_bootldr(target *t, int argc, const char **argv);
+#endif
 
 const struct command_s cmd_list[] = {
 	{"version", (cmd_handler)cmd_version, "Display firmware version info"},
@@ -85,6 +88,9 @@ const struct command_s cmd_list[] = {
 #endif
 #ifdef PLATFORM_HAS_UART_WHEN_SWDP
 	{"convert_tdio", (cmd_handler)cmd_convert_tdio,"Switch TDI/O pins to UART TX/RX functions"},
+#endif
+#ifdef PLATFORM_HAS_BOOTLOADER
+	{"enter_bootldr", (cmd_handler)cmd_enter_bootldr,"Force BMP into bootloader mode"},
 #endif
 	{NULL, NULL, NULL}
 };
@@ -318,6 +324,19 @@ static bool cmd_convert_tdio(target *t, int argc, const char **argv)
 	else
 		res = usbuart_convert_tdio(0);
 	gdb_outf("BAUD: %d\n", res);
+
+	return true;
+}
+#endif
+
+#ifdef PLATFORM_HAS_BOOTLOADER
+static bool cmd_enter_bootldr(target *t, int argc, const char **argv)
+{
+	(void) t;
+	(void) argc;
+	(void) argv;
+
+	scb_reset_system();
 
 	return true;
 }

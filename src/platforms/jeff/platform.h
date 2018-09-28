@@ -23,6 +23,8 @@
 
 #include <libopencm3/sam/d/port.h>
 #include <libopencm3/usb/usbd.h>
+#include <libopencm3/cm3/scb.h>
+#include <libopencm3/sam/d/nvmctrl.h>
 
 #include "timing.h"
 #include "version.h"
@@ -30,11 +32,16 @@
 //#define PLATFORM_HAS_DEBUG
 //#define USBUART_DEBUG
 #define PLATFORM_HAS_UART_WHEN_SWDP
+#define PLATFORM_HAS_BOOTLOADER
 
 #define BOARD_IDENT             "Black Magic Probe (SAMD), (Firmware " FIRMWARE_VERSION ")"
 #define BOARD_IDENT_DFU		"Black Magic (Upgrade) for Launchpad, (Firmware " FIRMWARE_VERSION ")"
 #define DFU_IDENT               "Black Magic Firmware Upgrade (SAMD)"
 #define DFU_IFACE_STRING	"hid"
+
+#define BOARD_IDENT_UPD       "Black Magic (DFU Upgrade), SAMD21, (Firmware " FIRMWARE_VERSION ")"
+#define UPD_IFACE_STRING       "@Internal Flash   /0x00000000/1*008Ka,15*8Kg"
+
 
 extern uint8_t running_status;
 
@@ -82,6 +89,9 @@ extern uint8_t running_status;
 #define ADC_REF_PIN	GPIO3
 #define ADC_POS_PIN	GPIO4
 #define ADC_MUXPOS	4
+
+#define BUTTON_PORT	PORTA
+#define BUTTON_PIN	GPIO27
 
 #else
 
@@ -138,6 +148,9 @@ extern uint8_t running_status;
 #define ADC_REF_PIN	GPIO3
 #define ADC_POS_PIN	GPIO2
 #define ADC_MUXPOS	0
+
+#define BUTTON_PORT	PORTA
+#define BUTTON_PIN	GPIO27
 
 #endif
 
