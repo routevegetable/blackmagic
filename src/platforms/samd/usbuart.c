@@ -88,7 +88,7 @@ void usbuart_init(void)
 	//usart_enable(USART_NUM, current_baud);
 	usart_setup(USART_NUM, current_baud);
 #ifndef DEBUG_ME
-        usart_set_pads(USART_NUM, 3, 0); /* uses different pads than the default */
+        usart_set_pads(USART_NUM, 3, 0); /* bm-sam uses different pads */
 #endif
 	usart_enable(USART_NUM, 0); /* baud==0 so setup is skipped */
 
@@ -98,7 +98,6 @@ void usbuart_init(void)
 
 int usbuart_convert_tdio(uint32_t arg)
 {
-#if 1
 
 	(void) arg;
 
@@ -130,18 +129,6 @@ int usbuart_convert_tdio(uint32_t arg)
 
 	return current_baud;
 
-	/* FOR TESTING PURPOSES ONLY */
-#else
-	if (arg){
-		usart_disable(USART_NUM);
-		usart_set_baudrate(USART_NUM, arg);
-		usart_enable(USART_NUM, 0);
-		current_baud = arg;
-	} else
-		usart_send(0, 65);
-
-	return current_baud;
-#endif
 }
 
 void usbuart_set_line_coding(struct usb_cdc_line_coding *coding)
