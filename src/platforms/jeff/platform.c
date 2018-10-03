@@ -37,7 +37,8 @@ static struct gclk_hw clock = {
 	.gclk0 = SRC_DFLL48M,
 	.gclk1 = SRC_OSC8M,
 	.gclk1_div = 30,      /* divide clock for ADC  */
-	.gclk2 = SRC_DFLL48M,
+	.gclk2 = SRC_OSC8M,
+	.gclk2_div = 100,     /* divide clock for TC */
 	.gclk3 = SRC_DFLL48M,
 	.gclk4 = SRC_DFLL48M,
 	.gclk5 = SRC_DFLL48M,
@@ -49,6 +50,9 @@ extern void trace_tick(void);
 
 uint8_t running_status;
 static volatile uint32_t time_ms;
+
+uint8_t button_pressed;
+//static volatile uint32_t button_counter;
 
 void sys_tick_handler(void)
 {
@@ -106,8 +110,38 @@ static void adc_init(void)
 #define EIC_CONFIG1 0x4000181C
 #define EIC_INTENSET 0x4000180C
 
+#define TC3 0x42002C00
+
+static void counter_init(void)
+{
+	/* enable bus and clock */
+	INSERTBF(PM_APBCMASK_TC3, 1, PM->apbcmask);
+
+	set_periph_clk(GCLK2, GCLK_ID_TC3);
+	periph_clk_en(GCLK_ID_TC3, 1);
+
+	/* reset */
+	*((uint16_t*)TC3) = 1;
+
+	/* set CTRLA.MODE (default 16-bit) */
+	/* set CTRLA.WAVEGEN */
+	/* set CTRLA.PRESCALER and CTRLA.PRESYNC */
+	*((uint16_t*)TC3) = (7<<8); //| (1<<12);
+
+	/* set CC0 (approx. 5 seconds delay) */
+	*((uint16_t*)(0x42002C18)) = 1000;
+
+	/* enable MC0 interrupt */
+	*((uint8_t*)(0x42002C0D)) = (1<<4);
+	nvic_enable_irq(NVIC_TC3_IRQ);
+
+	/* set CTRLBSET.ONESHOT */
+	/* enable the TC */
+}
+
 static void button_init(void)
 {
+#if 1
 	gpio_config_special(BUTTON_PORT, BUTTON_PIN, SOC_GPIO_PERIPH_A);
 
 	INSERTBF(PM_APBAMASK_EIC, 1, PM->apbamask);
@@ -115,9 +149,9 @@ static void button_init(void)
 	set_periph_clk(GCLK0, GCLK_ID_EIC);
 	periph_clk_en(GCLK_ID_EIC, 1);
 
-	/* configure falling edge */
+	/* configure r/f edge, enable filtering */
 	//EIC->evctrl = (1<<15);
-	*((uint32_t*)EIC_CONFIG1) = (2<<28);
+	*((uint32_t*)EIC_CONFIG1) = ((2+8)<<28);
 
 	/* enable the IEC */
 	*((uint8_t*)EIC) = (1<<1);
@@ -125,6 +159,11 @@ static void button_init(void)
 	/* enable interrupts */
 	*((uint32_t*)EIC_INTENSET) = (1<<15);
 	nvic_enable_irq(NVIC_EIC_IRQ);
+
+	//button_counter = 0;
+#else
+	gpio_config_input(BUTTON_PORT, BUTTON_PIN, 0);
+#endif
 }
 
 void platform_init(void)
@@ -162,6 +201,7 @@ void platform_init(void)
 	usbuart_init();
 	cdcacm_init();
 	adc_init();
+	counter_init();
 	button_init();
 }
 
@@ -231,6 +271,32 @@ void platform_request_boot(void)
 
 void eic_isr(void)
 {
-	
-	scb_reset_system();
+	if (!button_pressed){
+		/* set to rising-edge detection */
+		*((uint32_t*)EIC_CONFIG1) = ((1+8)<<28);
+		
+		/* enable counter */
+		*((uint16_t*)TC3) |= 2;
+		//*((uint8_t*)(0x42002C05)) = (1<<6);
+
+		button_pressed = 1;
+	} else {
+		/* set to falling-edge detection */
+		*((uint32_t*)EIC_CONFIG1) = ((2+8)<<28);
+
+		/* disable and reset counter */
+		*((uint16_t*)TC3) &= ~2;
+		*((uint16_t*)(0x42002C10)) = 0;
+
+		button_pressed = 0;
+	}
+
+	/* clear the interrupt */
+	*((uint32_t*)0x40001810) = (1<<15);
+}
+
+void tc3_isr(void)
+{
+	if ((*((uint8_t*)(0x42002C0E)) & 16))
+		scb_reset_system();
 }
