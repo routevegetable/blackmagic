@@ -33,6 +33,9 @@
 #include <libopencm3/cm3/systick.h>
 #include <libopencm3/cm3/scb.h>
 
+#include <libopencm3/sam/d/tc.h>
+#include <libopencm3/sam/d/eic.h>
+
 static struct gclk_hw clock = {
 	.gclk0 = SRC_DFLL48M,
 	.gclk1 = SRC_OSC8M,
@@ -52,7 +55,6 @@ uint8_t running_status;
 static volatile uint32_t time_ms;
 
 uint8_t button_pressed;
-//static volatile uint32_t button_counter;
 
 void sys_tick_handler(void)
 {
@@ -106,12 +108,6 @@ static void adc_init(void)
 	adc_enable(ADC_REFCTRL_VREFA,0,ADC_INPUTCTRL_GND,ADC_MUXPOS);
 }
 
-#define EIC 0x40001800
-#define EIC_CONFIG1 0x4000181C
-#define EIC_INTENSET 0x4000180C
-
-#define TC3 0x42002C00
-
 static void counter_init(void)
 {
 	/* enable bus and clock */
@@ -121,49 +117,38 @@ static void counter_init(void)
 	periph_clk_en(GCLK_ID_TC3, 1);
 
 	/* reset */
-	*((uint16_t*)TC3) = 1;
+	tc_reset(3);
 
-	/* set CTRLA.MODE (default 16-bit) */
-	/* set CTRLA.WAVEGEN */
 	/* set CTRLA.PRESCALER and CTRLA.PRESYNC */
-	*((uint16_t*)TC3) = (7<<8); //| (1<<12);
+	tc_config_ctrla(3,1,(7<<8));
 
 	/* set CC0 (approx. 5 seconds delay) */
-	*((uint16_t*)(0x42002C18)) = 1000;
+	tc_set_cc(3,0,1000);
 
 	/* enable MC0 interrupt */
-	*((uint8_t*)(0x42002C0D)) = (1<<4);
+	tc_enable_interrupt(3,(1<<4));
 	nvic_enable_irq(NVIC_TC3_IRQ);
-
-	/* set CTRLBSET.ONESHOT */
-	/* enable the TC */
 }
 
 static void button_init(void)
 {
-#if 1
 	gpio_config_special(BUTTON_PORT, BUTTON_PIN, SOC_GPIO_PERIPH_A);
 
+	/* enable bus and clock */
 	INSERTBF(PM_APBAMASK_EIC, 1, PM->apbamask);
 
 	set_periph_clk(GCLK0, GCLK_ID_EIC);
 	periph_clk_en(GCLK_ID_EIC, 1);
 
 	/* configure r/f edge, enable filtering */
-	//EIC->evctrl = (1<<15);
-	*((uint32_t*)EIC_CONFIG1) = ((2+8)<<28);
+	eic_set_config(15, 1, EIC_FALL);
 
 	/* enable the IEC */
-	*((uint8_t*)EIC) = (1<<1);
+	eic_enable(1);
 
 	/* enable interrupts */
-	*((uint32_t*)EIC_INTENSET) = (1<<15);
+	eic_enable_interrupt((1<<15));
 	nvic_enable_irq(NVIC_EIC_IRQ);
-
-	//button_counter = 0;
-#else
-	gpio_config_input(BUTTON_PORT, BUTTON_PIN, 0);
-#endif
 }
 
 void platform_init(void)
@@ -273,30 +258,28 @@ void eic_isr(void)
 {
 	if (!button_pressed){
 		/* set to rising-edge detection */
-		*((uint32_t*)EIC_CONFIG1) = ((1+8)<<28);
+		eic_set_config(15, 1, EIC_RISE);
 		
 		/* enable counter */
-		*((uint16_t*)TC3) |= 2;
-		//*((uint8_t*)(0x42002C05)) = (1<<6);
+		tc_enable(3,1);
 
 		button_pressed = 1;
 	} else {
 		/* set to falling-edge detection */
-		*((uint32_t*)EIC_CONFIG1) = ((2+8)<<28);
+		eic_set_config(15, 1, EIC_FALL);
 
 		/* disable and reset counter */
-		*((uint16_t*)TC3) &= ~2;
-		*((uint16_t*)(0x42002C10)) = 0;
+		tc_enable(3,0);
 
 		button_pressed = 0;
 	}
 
 	/* clear the interrupt */
-	*((uint32_t*)0x40001810) = (1<<15);
+	eic_clr_interrupt((1<<15));
 }
 
 void tc3_isr(void)
 {
-	if ((*((uint8_t*)(0x42002C0E)) & 16))
+	if (tc_interrupt_flag(3) & 16)
 		scb_reset_system();
 }
