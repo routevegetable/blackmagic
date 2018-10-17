@@ -163,6 +163,7 @@ void platform_init(void)
 	gpio_config_output(TDI_PORT, TDI_PIN, 0);
 
 	gpio_config_output(TMS_PORT, TMS_DIR_PIN, 0);
+	gpio_set(TMS_PORT, TMS_DIR_PIN);
 
 	/* enable both input and output with pullup disabled by default */
 	PORT_DIRSET(SWDIO_PORT) = SWDIO_PIN;
