@@ -249,6 +249,13 @@ const char *platform_target_voltage(void)
 
 char *serialno_read(char *s)
 {
+#ifdef CUSTOM_SER
+	s[0] = 'J';
+	s[1] = 'E';
+	s[2] = 'F';
+	s[3] = 'F';
+	return s;
+#else
         int i;
 	volatile uint32_t unique_id = *(volatile uint32_t *)0x0080A00C +
 		*(volatile uint32_t *)0x0080A040 +
@@ -266,6 +273,7 @@ char *serialno_read(char *s)
 	s[8] = 0;
 
 	return s;
+#endif
 }
 
 void platform_request_boot(void)

@@ -2,10 +2,13 @@ CROSS_COMPILE ?= arm-none-eabi-
 CC = $(CROSS_COMPILE)gcc
 OBJCOPY = $(CROSS_COMPILE)objcopy
 
-
 ifeq ($(ENABLE_DEBUG), 1)
 CFLAGS += -DDEBUG_ME
 CFLAGS += -DENABLE_DEBUG
+endif
+
+ifeq ($(CUSTOM_SER), 1)
+CFLAGS += -DCUSTOM_SER
 endif
 
 CFLAGS += -mthumb -mcpu=cortex-m0plus \
