@@ -72,7 +72,7 @@ blackmagic: include/version.h $(OBJ)
 
 %.bin:	%
 	@echo "  OBJCOPY $@"
-	$(Q)$(OBJCOPY) -O binary $^ $@
+	$(Q)$(OBJCOPY) $(OBJCOPY_FLAGS) -O binary $^ $@
 
 %.hex:	%
 	@echo "  OBJCOPY $@"
