@@ -32,6 +32,7 @@
 //#define PLATFORM_HAS_DEBUG
 //#define USBUART_DEBUG
 #define PLATFORM_HAS_UART_WHEN_SWDP
+#define PLATFORM_HAS_POWER_SWITCH
 #define PLATFORM_HAS_BOOTLOADER
 
 #define BOARD_IDENT             "Black Magic Probe (SAMD), (Firmware " FIRMWARE_VERSION ")"

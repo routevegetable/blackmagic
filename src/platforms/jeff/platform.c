@@ -56,6 +56,8 @@ static volatile uint32_t time_ms;
 
 uint8_t button_pressed;
 
+uint8_t tpwr_enabled;
+
 void sys_tick_handler(void)
 {
 	if(running_status)
@@ -182,6 +184,9 @@ void platform_init(void)
 	gpio_config_output(LED_PORT_UART, LED_UART, 0);//GPIO_OUT_FLAG_DEFAULT_HIGH);
 	gpio_clear(LED_PORT_UART, LED_UART);
 
+	/* set up TPWR */
+	gpio_set(PWR_BR_PORT, PWR_BR_PIN);
+	gpio_config_output(PWR_BR_PORT, PWR_BR_PIN, GPIO_OUT_FLAG_DEFAULT_HIGH);
 
 	timing_init();
 	usbuart_init();
@@ -205,6 +210,18 @@ void platform_srst_set_val(bool assert)
 bool platform_srst_get_val(void)
 {
 	return gpio_get(SRST_PORT, SRST_PIN) != 0;
+}
+
+bool platform_target_get_power(void)
+{
+	//return !gpio_get(PWR_BR_PORT, PWR_BR_PIN);
+	return tpwr_enabled;
+}
+
+void platform_target_set_power(bool power)
+{
+	gpio_set_val(PWR_BR_PORT, PWR_BR_PIN, !power);
+	tpwr_enabled = power;
 }
 
 void platform_delay(uint32_t ms)
