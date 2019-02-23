@@ -196,20 +196,24 @@ void platform_init(void)
 	button_init();
 }
 
+uint8_t srst_state;
 void platform_srst_set_val(bool assert)
 {
 	volatile int i;
 	if (!assert) {
 		gpio_clear(SRST_PORT, SRST_PIN);
 		for(i = 0; i < 10000; i++) asm("nop");
+		srst_state = 0;
 	} else {
 		gpio_set(SRST_PORT, SRST_PIN);
+		srst_state = 1;
 	}
 }
 
 bool platform_srst_get_val(void)
 {
-	return gpio_get(SRST_PORT, SRST_PIN) != 0;
+	//return gpio_get(SRST_PORT, SRST_PIN) != 0;
+	return srst_state;
 }
 
 bool platform_target_get_power(void)
