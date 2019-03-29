@@ -44,6 +44,7 @@ struct command_s {
 };
 
 static bool cmd_version(void);
+static bool cmd_serial(void);
 static bool cmd_help(target *t);
 
 static bool cmd_jtag_scan(target *t, int argc, char **argv);
@@ -71,6 +72,9 @@ static bool cmd_enter_bootldr(target *t, int argc, const char **argv);
 
 const struct command_s cmd_list[] = {
 	{"version", (cmd_handler)cmd_version, "Display firmware version info"},
+#ifdef PLATFORM_HAS_PRINTSERIAL
+	{"serial", (cmd_handler)cmd_serial, "Display firmware serial number"},
+#endif
 	{"help", (cmd_handler)cmd_help, "Display help for monitor commands"},
 	{"jtag_scan", (cmd_handler)cmd_jtag_scan, "Scan JTAG chain for devices" },
 	{"swdp_scan", (cmd_handler)cmd_swdp_scan, "Scan SW-DP for devices" },
@@ -351,6 +355,14 @@ static bool cmd_enter_bootldr(target *t, int argc, const char **argv)
 
 	scb_reset_system();
 
+	return true;
+}
+#endif
+
+#ifdef PLATFORM_HAS_PRINTSERIAL
+bool cmd_serial(void)
+{
+	print_serial();
 	return true;
 }
 #endif

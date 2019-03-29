@@ -22,6 +22,7 @@
 #include "gdb_if.h"
 #include "cdcacm.h"
 #include "usbuart.h"
+#include "gdb_packet.h"
 
 #include <libopencm3/sam/d/nvic.h>
 #include <libopencm3/sam/d/port.h>
@@ -278,6 +279,14 @@ char *serialno_read(char *s)
 
 	return s;
 #endif
+}
+
+void print_serial(void)
+{
+	gdb_outf("0x%08X%08X%08X%08X\n", *(volatile uint32_t *)0x0080A048,
+			*(volatile uint32_t *)0x0080A044,
+			*(volatile uint32_t *)0x0080A040,
+			*(volatile uint32_t *)0x0080A00C);
 }
 
 void platform_request_boot(void)

@@ -34,6 +34,7 @@
 #define PLATFORM_HAS_UART_WHEN_SWDP
 #define PLATFORM_HAS_POWER_SWITCH
 #define PLATFORM_HAS_BOOTLOADER
+#define PLATFORM_HAS_PRINTSERIAL
 
 #define BOARD_IDENT             "Black Magic Probe (SAMD), (Firmware " FIRMWARE_VERSION ")"
 #define BOARD_IDENT_DFU		"Black Magic (Upgrade) for Launchpad, (Firmware " FIRMWARE_VERSION ")"
@@ -219,4 +220,5 @@ static inline int platform_hwversion(void)
 
 void uart_pop(void);
 int usbuart_convert_tdio(uint32_t arg);
+void print_serial(void);
 #endif
