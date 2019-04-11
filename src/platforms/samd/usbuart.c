@@ -58,7 +58,7 @@ struct {
 /* non blocking putc function */
 static void usart_putc(char c)
 {
-#ifndef CONSOLE_NO_AUTO_CRLF
+#ifdef CONSOLE_NO_AUTO_CRLF
 	if (c == '\n')
 		usart_putc('\r');
 #endif

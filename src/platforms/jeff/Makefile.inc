@@ -11,6 +11,10 @@ ifeq ($(CUSTOM_SER), 1)
 CFLAGS += -DCUSTOM_SER
 endif
 
+ifeq ($(CONSOLE_NO_AUTO_CRLF), 1)
+CFLAGS += -DCONSOLE_NO_AUTO_CRLF
+endif
+
 CFLAGS += -mthumb -mcpu=cortex-m0plus \
 	-DSAMD -DSAMD21E17 -DBLACKMAGIC -I../libopencm3/include \
 	-Iplatforms/samd -msoft-float -ffunction-sections -fdata-sections -MD
