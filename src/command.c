@@ -321,10 +321,15 @@ static bool cmd_debug_bmp(target *t, int argc, const char **argv)
 static bool cmd_convert_tdio(target *t, int argc, const char **argv)
 {
         (void)t;
-        (void) argc;
-	(void) argv;
 
-	usbuart_convert_tdio(0);
+	uint8_t val;
+	if (argc > 1) {
+		val = (!strcmp(argv[1], "enable")) ? true : false;
+		usbuart_convert_tdio(val);
+	} else {
+		gdb_outf("Convert_tdio: %s\n",(usbuart_convert_tdio_enabled()) ?
+				"enabled" : "disabled");
+	}
 
 	return true;
 }

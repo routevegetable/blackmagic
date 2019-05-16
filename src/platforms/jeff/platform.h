@@ -220,5 +220,6 @@ static inline int platform_hwversion(void)
 
 void uart_pop(void);
 int usbuart_convert_tdio(uint32_t arg);
+int usbuart_convert_tdio_enabled(void);
 void print_serial(void);
 #endif

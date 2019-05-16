@@ -96,12 +96,15 @@ void usbuart_init(void)
 	usart_enable_tx_interrupt(USART_NUM);
 }
 
+static uint8_t convert_tdio_enabled;
 int usbuart_convert_tdio(uint32_t arg)
 {
 
 	(void) arg;
 
-	if (USART_NUM) {
+	convert_tdio_enabled = arg;
+
+	if (!convert_tdio_enabled) {
 		usart_disable(1);
 		USART_NUM = 0;
 		usbuart_init();
@@ -129,6 +132,11 @@ int usbuart_convert_tdio(uint32_t arg)
 
 	return current_baud;
 
+}
+
+int usbuart_convert_tdio_enabled(void)
+{
+	return convert_tdio_enabled;
 }
 
 void usbuart_set_line_coding(struct usb_cdc_line_coding *coding)
