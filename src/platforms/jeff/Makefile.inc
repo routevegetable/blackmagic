@@ -48,8 +48,8 @@ blackmagic_dfu: usbdfu.o
 
 blackmagic_full.bin: blackmagic_dfu.bin blackmagic.bin
 	@echo "  CAT     $@"
+	$(Q)cp blackmagic.bin jeff-$(shell git describe --tags --always --dirty).bin
 	$(Q)cat $^ > $@
 
 host_clean:
-	-$(Q)$(RM) -f blackmagic.bin blackmagic_full.bin blackmagic_dfu blackmagic_dfu.bin blackmagic_dfu.hex
-
+	$(Q)$(RM) -f blackmagic.bin blackmagic_full.bin blackmagic_dfu blackmagic_dfu.bin blackmagic_dfu.hex jeff*.bin
