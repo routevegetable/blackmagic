@@ -169,6 +169,15 @@ bool nrf51_probe(target *t)
 		nrf51_add_flash(t, NRF51_UICR, 0x100, 0x100);
 		target_add_commands(t, nrf51_cmd_list, "nRF52");
 		return true;
+	case 0x016E: /* nRF52810 */
+  case 0x0174:
+		// RAM/Flash info: https://infocenter.nordicsemi.com/topic/ps_nrf52810/memory.html?cp=4_5_0_3_1
+		t->driver = "Nordic nRF52";
+		target_add_ram(t, 0x20000000, 24*1024);
+		nrf51_add_flash(t, 0x00000000, 192*1024, NRF52_PAGE_SIZE);
+		nrf51_add_flash(t, NRF51_UICR, 0x100, 0x100);
+		target_add_commands(t, nrf51_cmd_list, "nRF52");
+		return true;
 	}
 
 	return false;
@@ -333,3 +342,99 @@ static bool nrf51_cmd_read(target *t, int argc, const char *argv[])
 	return nrf51_cmd_read_help(t);
 }
 
+
+#include "adiv5.h"
+#define NRF52_MDM_IDR 0x02880000
+
+static bool nrf51_mdm_cmd_erase_mass(target *t, int argc, const char **argv);
+
+const struct command_s nrf51_mdm_cmd_list[] = {
+	{"erase_mass", (cmd_handler)nrf51_mdm_cmd_erase_mass, "Erase entire flash memory"},
+	{NULL, NULL, NULL}
+};
+
+#define MDM_POWER_EN ADIV5_DP_REG(0x01)
+#define MDM_SELECT_AP ADIV5_DP_REG(0x02)
+#define MDM_STATUS  ADIV5_AP_REG(0x08)
+#define MDM_CONTROL ADIV5_AP_REG(0x04)
+#define MDM_PROT_EN  ADIV5_AP_REG(0x0C)
+
+
+static enum target_halt_reason mdm_halt_poll(target *t, target_addr *watch)
+{
+	(void)t; (void)watch;
+	return TARGET_HALT_REQUEST;
+}
+
+static bool nop_function(void)
+{
+    return true;
+}
+void nrf51_mdm_probe(ADIv5_AP_t *ap)
+{
+	switch(ap->idr) {
+	case NRF52_MDM_IDR:
+		break;
+	default:
+		return;
+	}
+
+	target *t = target_new();
+	if (!t) {
+		return;
+	}
+
+	adiv5_ap_ref(ap);
+	t->priv = ap;
+	t->priv_free = (void*)adiv5_ap_unref;
+
+  t->attach = (void*)nop_function;
+	t->detach = (void*)nop_function;
+	t->check_error = (void*)nop_function;
+	t->mem_read = (void*)nop_function;
+	t->mem_write = (void*)nop_function;
+	t->regs_size = 4;
+	t->regs_read = (void*)nop_function;
+	t->regs_write = (void*)nop_function;
+	t->reset = (void*)nop_function;
+	t->halt_request = (void*)nop_function;
+	t->halt_poll = mdm_halt_poll;
+	t->halt_resume = (void*)nop_function;
+
+
+	uint32_t status = adiv5_ap_read(ap, MDM_PROT_EN);
+	status = adiv5_ap_read(ap, MDM_PROT_EN);
+	if (status)
+		t->driver = "Nordic nRF52 Access Port";
+	else
+		t->driver = "Nordic nRF52 Access Port (protected)";
+	target_add_commands(t, nrf51_mdm_cmd_list, t->driver);
+}
+
+
+static bool nrf51_mdm_cmd_erase_mass(target *t, int argc, const char **argv)
+{
+	(void)argc;
+	(void)argv;
+	ADIv5_AP_t *ap = t->priv;
+
+	uint32_t status = adiv5_ap_read(ap, MDM_STATUS);
+
+	adiv5_dp_write(ap->dp, MDM_POWER_EN, 0x50000000);
+
+	adiv5_dp_write(ap->dp, MDM_SELECT_AP, 0x01000000);
+
+	adiv5_ap_write(ap, MDM_CONTROL, 0x00000001);
+
+	// Read until 0, probably should have a timeout here...
+	do {
+		status = adiv5_ap_read(ap, MDM_STATUS);
+	} while (status);
+
+	// The second read will provide true prot status
+	status = adiv5_ap_read(ap, MDM_PROT_EN);
+	status = adiv5_ap_read(ap, MDM_PROT_EN);
+
+	// should we return the prot status here?
+	return true;
+}
